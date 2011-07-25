@@ -6,14 +6,14 @@ open System.Windows.Shapes
 
 [<AutoOpen>]
 module Math =
-    let PI = System.Math.PI
+    let pi = System.Math.PI
 
 [<Sealed>]
 type Turtle private () =
     static let mutable isPenDown = true
     static let mutable penColor = Colors.Black
-    static let mutable x = 0.0
-    static let mutable y = 0.0
+    static let mutable x = 256.0
+    static let mutable y = 192.0
     static let mutable a = 0.0
     static member Left(degrees:float) =
         a <- a - degrees
@@ -24,7 +24,7 @@ type Turtle private () =
     static member Right(degrees:int) =
         Turtle.Right(float degrees)
     static member Forward(distance:float) =
-        let r = a * PI / 180.0
+        let r = a * pi / 180.0
         let x' = x + distance * cos r
         let y' = y + distance * sin r        
         let addLine (canvas:Canvas) =

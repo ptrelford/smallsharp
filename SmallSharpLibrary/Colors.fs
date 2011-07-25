@@ -1,7 +1,7 @@
 ﻿namespace Library
 
 [<AutoOpen>]
-module Colors =
+module colors =
     open System.Windows.Media
     let red = Colors.Red
     let green = Colors.Green

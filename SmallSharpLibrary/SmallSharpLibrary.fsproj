@@ -43,6 +43,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections.fs" />
     <Compile Include="TextWindow.fs" />
     <Compile Include="GraphicsWindow.fs" />
     <Compile Include="Colors.fs" />
