@@ -15,4 +15,3 @@ module colors =
     let cyan = Colors.Cyan
     let magenta = Colors.Magenta
     let purple = Colors.Purple
-

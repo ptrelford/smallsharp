@@ -41,8 +41,12 @@ type Turtle private () =
         isPenDown <- false    
     static member PenDown() =
         isPenDown <- true
-    static member PenColor color =
+    static member PenColor(color:Color) =
         penColor <- color
+    static member PenName(name:string) =
+        let colors = typeof<Colors>.GetProperties()
+        let p = colors |> Seq.find (fun p -> p.Name = name)
+        penColor <- p.GetValue(null,[||]) :?> Color
 
 [<AutoOpen>]
 module turtle =
@@ -54,7 +58,7 @@ module turtle =
     let lt (degrees:angle) = Turtle.Left degrees
     let right (degrees:angle) = Turtle.Right degrees
     let rt (degrees:angle) = Turtle.Right degrees
-    let pencolor color = Turtle.PenColor color
+    let pencolor (color:Color) = Turtle.PenColor color
     let penup () = Turtle.PenUp()
     let pendown () = Turtle.PenDown()
     let repeat n f = for i = 1 to n do f ()
