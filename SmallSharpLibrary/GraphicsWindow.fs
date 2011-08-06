@@ -25,20 +25,30 @@ type GraphicsWindow private () =
         thread.Start()
         autoEvent.WaitOne() |> ignore        
         app.Value, app.Value.Dispatcher
-    static let penColor = Colors.Blue
-    static let penWidth = 1.0
-    static let mutable mousePosition = 0.0,0.0  
+    static let mutable brushColor = Colors.Blue
+    static let mutable brushWidth = 1.0
+    static let mutable mousePosition = 0.0,0.0      
+    static let mutable mouseMove = Action(ignore)
+    static let mutable mouseDown = Action(ignore)
+    static let mutable mouseUp = Action(ignore)
     static let mutable lastKey = Key.None
+    static let mutable keyDown = Action<Key>(ignore)
+    static let mutable keyUp = Action<Key>(ignore)
     static let window = 
         let createWindow () =
             let win = Window(SizeToContent=SizeToContent.WidthAndHeight)
             win.Content <- Canvas(Width=512.0,Height=384.0)
             win.MouseMove |> Event.add (fun e -> 
                 mousePosition <- let p = e.GetPosition(win) in p.X, p.Y
+                mouseMove.Invoke()
             )
+            win.MouseDown |> Event.add (fun _ -> mouseDown.Invoke())
+            win.MouseUp |> Event.add (fun _ -> mouseUp.Invoke())
             win.KeyDown |> Event.add (fun e -> 
                 lastKey <- e.Key
+                keyDown.Invoke(e.Key)
             )
+            win.KeyUp |> Event.add (fun e -> keyDown.Invoke(e.Key))
             win
         lazy(createWindow())
     static let invoke f = 
@@ -51,7 +61,8 @@ type GraphicsWindow private () =
             f canvas)
         ) |> ignore
     static member internal Invoke f = invoke f
-    static member internal Draw f = draw f
+    static member internal InvokeWithReturn f = invokeWithReturn f
+    static member internal Draw f = draw f    
     static member Title
         with get() = 
             invokeWithReturn (fun window -> window.Title)
@@ -67,6 +78,12 @@ type GraphicsWindow private () =
             invokeWithReturn (fun window -> window.Height)
         and set(height) = 
             invoke (fun window -> window.Height <- height)                         
+    static member BrushColor
+        with get() = brushColor
+        and set(color) = brushColor <- color
+    static member BrushWidth
+        with get() = brushWidth
+        and set(width) = brushWidth <- width
     static member Show() =               
         invoke (fun window -> window.Show())
     static member Hide() =               
@@ -74,15 +91,15 @@ type GraphicsWindow private () =
     static member DrawLine(x1:float,y1:float,x2:float,y2:float) =
         draw (fun canvas ->             
             let line = Line(X1=x1,Y1=y1,X2=x2,Y2=y2)           
-            line.Stroke <- SolidColorBrush penColor
-            line.StrokeThickness <- penWidth
+            line.Stroke <- SolidColorBrush brushColor
+            line.StrokeThickness <- brushWidth
             line |> canvas.Children.Add |> ignore
         )
     static member DrawEllipse(x:float,y:float,width:float,height:float) =
         draw (fun canvas ->             
             let ellipse = Ellipse(Width=width,Height=height)           
-            ellipse.Stroke <- SolidColorBrush penColor
-            ellipse.StrokeThickness <- penWidth
+            ellipse.Stroke <- SolidColorBrush brushColor
+            ellipse.StrokeThickness <- brushWidth
             Canvas.SetLeft(ellipse,x)
             Canvas.SetTop(ellipse,y)
             ellipse |> canvas.Children.Add |> ignore
@@ -93,17 +110,12 @@ type GraphicsWindow private () =
             Canvas.SetLeft(block,x)
             Canvas.SetTop(block,y)
             block |> canvas.Children.Add |> ignore
-        )
-    [<CLIEvent>]
-    static member MouseDown = window.Value.MouseDown
-    [<CLIEvent>]
-    static member MouseUp = window.Value.MouseUp
-    [<CLIEvent>]
-    static member MouseMove = window.Value.MouseMove      
+        ) 
+    static member MouseDown (action:Action) = mouseDown <- action      
+    static member MouseUp (action:Action) = mouseUp <- action     
+    static member MouseMove (action:Action) = mouseMove <- action
     static member MouseX with get () = fst mousePosition
     static member MouseY with get () = snd mousePosition
-    [<CLIEvent>]
-    static member KeyDown = window.Value.KeyDown      
-    [<CLIEvent>]
-    static member KeyUp = window.Value.KeyUp
+    static member KeyDown (action:Action<Key>) = keyDown <- action
+    static member KeyUp (action:Action<Key>) = keyUp <- action
     static member LastKey with get () = lastKey

@@ -10,7 +10,7 @@ type Extensions private () =
     static member Times(count:int, action:System.Action<int>) =
         for i=1 to count do action.Invoke(i)
     [<Extension>]
-    static member ForEach(xs:IEnumerable<'T>, action:System.Action<'T>) =
+    static member Each(xs:IEnumerable<'T>, action:System.Action<'T>) =
         for x in xs do action.Invoke(x)
     [<Extension>]
     static member ForAll(xs:IEnumerable<'T>, predicate:System.Predicate<'T>) =
