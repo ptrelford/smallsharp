@@ -77,14 +77,21 @@ type Form private () =
     static member NumericalQuestion(label, isValidCallback:int -> bool) =        
         Form.Question(label)
     static member Options(label, options:string seq, selectedItem) =
-        let create () =
+        let createCombo () =
             let answer = ComboBox()
             options |> Seq.iter (answer.Items.Add >> ignore)
             answer.SelectedItem <- selectedItem
             answer, fun () -> answer.SelectedItem
-        addQuestion(label,create)
+        let createRadio () =             
+            let panel = StackPanel()
+            options |> Seq.iter (fun s -> 
+                let isChecked = System.Nullable<_>((s=selectedItem))
+                RadioButton(Content=s,GroupName=label,IsChecked=isChecked) 
+                |> (panel.Children.Add >> ignore))
+            panel, fun () -> box selectedItem
+        addQuestion(label,createCombo)
     static member Options(label, options:string seq) =
-        Form.Options(label, options, 0)
+        Form.Options(label, options, options.First())
     static member Options(label, options:int seq, selectedItem) =
         let create () =
             let answer = ComboBox()
