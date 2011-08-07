@@ -15,6 +15,8 @@ type System.Collections.Generic.IEnumerable<'a> with
     member xs.Exists f = Seq.exists f xs
     member xs.Filter f = Seq.filter f xs
     member xs.Find f = Seq.find f xs
+    member xs.FindIndex f = Seq.findIndex f xs
+    member xs.First() = Seq.head xs    
     member xs.Map f = Seq.map f
     member xs.Reduce f = Seq.reduce f xs
     member xs.SortBy f = Seq.sortBy f xs
