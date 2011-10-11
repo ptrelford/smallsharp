@@ -17,17 +17,18 @@ type GraphicsWindow private () =
         let autoEvent = new AutoResetEvent(false);
         let thread =       
             new Thread(fun () -> 
-                let value = app.Force()            
-                autoEvent.Set() |> ignore                          
+                let value = app.Force()
+                autoEvent.Set() |> ignore
                 value.Run() |> ignore
             )        
-        thread.SetApartmentState(ApartmentState.STA)        
+        thread.SetApartmentState(ApartmentState.STA)
         thread.Start()
-        autoEvent.WaitOne() |> ignore        
+        autoEvent.WaitOne() |> ignore
         app.Value, app.Value.Dispatcher
     static let mutable brushColor = Colors.Blue
     static let mutable brushWidth = 1.0
-    static let mutable mousePosition = 0.0,0.0      
+    static let mutable fillColor = Colors.Transparent
+    static let mutable mousePosition = 0.0,0.0
     static let mutable mouseMove = Action(ignore)
     static let mutable mouseDown = Action(ignore)
     static let mutable mouseUp = Action(ignore)
@@ -54,7 +55,7 @@ type GraphicsWindow private () =
     static let invoke f = 
         dispatcher.Invoke(Action(fun () -> f window.Value)) |> ignore    
     static let invokeWithReturn (f:Window -> 'a) = 
-        dispatcher.Invoke(System.Func<_>(fun () -> f window.Value)) :?> 'a    
+        dispatcher.Invoke(System.Func<_>(fun () -> f window.Value)) :?> 'a
     static let draw f = 
         dispatcher.Invoke(Action(fun () -> 
             let canvas = window.Value.Content :?> Canvas
@@ -62,12 +63,12 @@ type GraphicsWindow private () =
         ) |> ignore
     static member internal Invoke f = invoke f
     static member internal InvokeWithReturn f = invokeWithReturn f
-    static member internal Draw f = draw f    
+    static member internal Draw f = draw f
     static member Title
         with get() = 
             invokeWithReturn (fun window -> window.Title)
         and set(title) = 
-            invoke (fun window -> window.Title <- title)            
+            invoke (fun window -> window.Title <- title)
     static member Width
         with get() = 
             invokeWithReturn (fun window -> window.Width)
@@ -77,40 +78,55 @@ type GraphicsWindow private () =
         with get() = 
             invokeWithReturn (fun window -> window.Height)
         and set(height) = 
-            invoke (fun window -> window.Height <- height)                         
+            invoke (fun window -> window.Height <- height)
     static member BrushColor
         with get() = brushColor
         and set(color) = brushColor <- color
     static member BrushWidth
         with get() = brushWidth
         and set(width) = brushWidth <- width
-    static member Show() =               
+    static member FillColor
+        with get() = fillColor
+        and set(color) = fillColor <- color
+    static member Show() =
         invoke (fun window -> window.Show())
-    static member Hide() =               
-        invoke (fun window -> window.Hide())    
+    static member Hide() =
+        invoke (fun window -> window.Hide())
     static member DrawLine(x1:float,y1:float,x2:float,y2:float) =
-        draw (fun canvas ->             
-            let line = Line(X1=x1,Y1=y1,X2=x2,Y2=y2)           
+        draw (fun canvas ->
+            let line = Line(X1=x1,Y1=y1,X2=x2,Y2=y2)
+            line.Fill <- SolidColorBrush fillColor
             line.Stroke <- SolidColorBrush brushColor
             line.StrokeThickness <- brushWidth
             line |> canvas.Children.Add |> ignore
         )
     static member DrawEllipse(x:float,y:float,width:float,height:float) =
-        draw (fun canvas ->             
-            let ellipse = Ellipse(Width=width,Height=height)           
+        draw (fun canvas ->
+            let ellipse = Ellipse(Width=width,Height=height)
+            ellipse.Fill <- SolidColorBrush fillColor
             ellipse.Stroke <- SolidColorBrush brushColor
             ellipse.StrokeThickness <- brushWidth
             Canvas.SetLeft(ellipse,x)
             Canvas.SetTop(ellipse,y)
             ellipse |> canvas.Children.Add |> ignore
         )
+    static member DrawRectangle(x:float,y:float,width:float,height:float) =
+        draw (fun canvas ->
+            let rectangle = Rectangle(Width=width,Height=height)
+            rectangle.Fill <- SolidColorBrush fillColor
+            rectangle.Stroke <- SolidColorBrush brushColor
+            rectangle.StrokeThickness <- brushWidth
+            Canvas.SetLeft(rectangle,x)
+            Canvas.SetTop(rectangle,y)
+            rectangle |> canvas.Children.Add |> ignore
+        )
     static member DrawText(x:float,y:float,text:string) =
-        draw (fun canvas ->             
+        draw (fun canvas ->
             let block = TextBlock(Text=text)
             Canvas.SetLeft(block,x)
             Canvas.SetTop(block,y)
             block |> canvas.Children.Add |> ignore
-        ) 
+        )
     static member MouseDown (action:Action) = mouseDown <- action      
     static member MouseUp (action:Action) = mouseUp <- action     
     static member MouseMove (action:Action) = mouseMove <- action
