@@ -1,5 +1,6 @@
 ﻿open Library
 
+open System
 open System.Globalization
 
 let countries =
@@ -8,10 +9,15 @@ let countries =
     |> Seq.distinct
     |> Seq.sort
 
-let isRequired (answer:string) = answer.Length > 0
+let isRequired (answer:string) = 
+    if String.IsNullOrEmpty answer then "Required" else null
+
+let validateCardNo (s:string) =
+    if s.Length = 16 && s |> Seq.forall Char.IsDigit 
+    then null else "Incorrect card"
 
 do  Form.Title <- "Checkout"
-
+    
     Form.Group("Delivery Address")
     Form.Question("Full Name", isRequired)   
     Form.Question("Address Line 1", isRequired)
@@ -23,7 +29,7 @@ do  Form.Title <- "Checkout"
     Form.Question("Phone")
 
     Form.Group("Card")    
-    Form.NumericalQuestion("Card number", fun n -> true)
+    Form.NumericalQuestion("Card number", validateCardNo)
     Form.Question("Name on card", isRequired)
        
     Form.Information("Expiration date")

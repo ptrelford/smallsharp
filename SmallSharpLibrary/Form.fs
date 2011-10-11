@@ -1,8 +1,23 @@
 ﻿namespace Library
 
+open System
 open System.Collections.Generic
+open System.Globalization
 open System.Windows
 open System.Windows.Controls
+open System.Windows.Data
+
+type StringValue () =
+    let mutable s = ""
+    member this.Value with get () = s and set v = s <- v
+
+type CustomValidationRule (validator:string -> string) =
+    inherit ValidationRule ()
+    override x.Validate(value:obj, culture:CultureInfo) =
+        let s = value :?> string
+        match s |> validator with
+        | null | "" ->  ValidationResult.ValidResult
+        | error -> ValidationResult(false, error)
 
 [<Sealed>]
 type Form private () =    
@@ -12,9 +27,11 @@ type Form private () =
     static let createForm () = 
         GraphicsWindow.InvokeWithReturn(fun window ->
             GraphicsWindow.Show()
-            let table = Grid(Margin=Thickness(8.0))                       
-            table.ColumnDefinitions.Add(ColumnDefinition(Width=GridLength(2.0,GridUnitType.Star)))
-            table.ColumnDefinitions.Add(ColumnDefinition(Width=GridLength(1.0,GridUnitType.Star)))            
+            let table = Grid(Margin=Thickness(8.0))
+            let addColumn width =
+                table.ColumnDefinitions.Add(ColumnDefinition(Width=width))
+            GridLength(2.0,GridUnitType.Star) |> addColumn            
+            GridLength(1.0,GridUnitType.Star) |> addColumn 
             window.Content <- table
             let button = Button(Content="Submit")
             button.Click.Add(fun _ -> answers |> Seq.map (fun f -> f()) |> submit) 
@@ -67,15 +84,21 @@ type Form private () =
             Grid.SetColumnSpan(control, 2)
             table.Children.Add control |> ignore 
         addRow create
-    static member Question(label, isValidCallback:string -> bool) =       
+    static member Question(label, isValidCallback:string -> string) =
         let create () =
             let control = TextBox()
-            control, fun () -> box control.Text        
+            control.DataContext <- StringValue()
+            let binding = Binding "Value"
+            binding.UpdateSourceTrigger <- UpdateSourceTrigger.PropertyChanged
+            binding.Mode <- BindingMode.TwoWay
+            binding.ValidationRules.Add(CustomValidationRule(isValidCallback))
+            control.SetBinding(TextBox.TextProperty, binding) |> ignore
+            control, fun () -> box control.Text
         addQuestion(label,create)
     static member Question(label) =
-        Form.Question(label, (fun _ -> true))
-    static member NumericalQuestion(label, isValidCallback:int -> bool) =        
-        Form.Question(label)
+        Form.Question(label, (fun _ -> null))
+    static member NumericalQuestion(label, isValidCallback:string -> string) =        
+        Form.Question(label, fun s -> s.Trim() |> isValidCallback)
     static member Options(label, options:string seq, selectedItem) =
         let createCombo () =
             let answer = ComboBox()
