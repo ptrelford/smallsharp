@@ -64,6 +64,11 @@ type GraphicsWindow private () =
     static member internal Invoke f = invoke f
     static member internal InvokeWithReturn f = invokeWithReturn f
     static member internal Draw f = draw f
+    static member Topmost
+        with get() = 
+            invokeWithReturn (fun window -> window.Topmost)
+        and set(value) = 
+            invoke (fun window -> window.Topmost <- value)
     static member Title
         with get() = 
             invokeWithReturn (fun window -> window.Title)
@@ -100,6 +105,8 @@ type GraphicsWindow private () =
             line.StrokeThickness <- brushWidth
             line |> canvas.Children.Add |> ignore
         )
+    static member DrawLine(x1:int,y1:int,x2:int,y2:int) =
+        GraphicsWindow.DrawLine(float x1, float y1, float x2, float y2)
     static member DrawEllipse(x:float,y:float,width:float,height:float) =
         draw (fun canvas ->
             let ellipse = Ellipse(Width=width,Height=height)
@@ -110,6 +117,8 @@ type GraphicsWindow private () =
             Canvas.SetTop(ellipse,y)
             ellipse |> canvas.Children.Add |> ignore
         )
+    static member DrawEllipse(x:int,y:int,width:int,height:int) =
+        GraphicsWindow.DrawEllipse(float x, float y, float width, float height)
     static member DrawRectangle(x:float,y:float,width:float,height:float) =
         draw (fun canvas ->
             let rectangle = Rectangle(Width=width,Height=height)
@@ -120,6 +129,8 @@ type GraphicsWindow private () =
             Canvas.SetTop(rectangle,y)
             rectangle |> canvas.Children.Add |> ignore
         )
+    static member DrawRectangle(x:int,y:int,width:int,height:int) =
+        GraphicsWindow.DrawRectangle(float x, float y, float width, float height)
     static member DrawText(x:float,y:float,text:string) =
         draw (fun canvas ->
             let block = TextBlock(Text=text)
